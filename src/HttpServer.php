@@ -23,24 +23,19 @@ use Symfony\Component\Process\PhpExecutableFinder;
 class HttpServer
 {
 
-	/**
-	 * @var array
-	 */
+	/** @var array */
 	private $pipes = array();
 
-	/**
-	 * @var resource
-	 */
+	/** @var resource */
 	private $process;
 
-	/**
-	 * @var UrlScript
-	 */
+	/** @var UrlScript */
 	private $url;
+	
+	/** @var string */
+	private $tempDir;
 
-	/**
-	 * @var array
-	 */
+	/** @var array */
 	private static $spec = array(
 		0 => array("pipe", "r"), // stdin is a pipe that the child will read from
 		1 => array("pipe", "w"), // stdout is a pipe that the child will write to
@@ -49,8 +44,9 @@ class HttpServer
 
 
 
-	public function __construct()
+	public function __construct(string $tempDir)
 	{
+		$this->tempDir =$tempDir;
 		register_shutdown_function(function () {
 			$this->slaughter();
 		});
@@ -92,7 +88,7 @@ class HttpServer
 				$port = rand(8000, 10000);
 				if (isset($lock))
 					@fclose($lock);
-				$lock = fopen(dirname(TEMP_DIR) . '/http-server-' . $port . '.lock', 'w');
+				$lock = fopen($this->tempDir . '/http-server-' . $port . '.lock', 'w');
 			} while (!flock($lock, LOCK_EX | LOCK_NB, $wouldBlock) || $wouldBlock);
 		}
 
